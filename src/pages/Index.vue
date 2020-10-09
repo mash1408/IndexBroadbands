@@ -1,9 +1,14 @@
 <template>
-  <q-page class="bg-dark ">
+  <q-page class=" ">
     <div class="row justify-between main">
     <q-btn color="red" icon-right="send" label="Go To Map" v-on:click="map"/>
     <q-btn color="red" icon-right="send" label="Signup" v-on:click="signUp"/>
 <q-btn color="red" icon-right="send" label="Send us a Coffee" v-on:click="donate"/>
+<q-input filled v-model="number" label="Watsapp Number" />
+ <q-btn round dense flat icon="add" />
+ <a href="https://api.whatsapp.com/send?text=Hey%20there%2C%20Register%20Your%20Broadband%20COnnection%20%0Today%20And0%20Help%20Others%20out!"><img src="https://res.cloudinary.com/dxafjfxod/image/upload/v1595861934/WhatSharer/Powered_By_WhatSharer_izeybs.png" style="display: block; margin-left: auto; margin-right: auto; max-width: 200px; width: 50%;" title="Share on WhatsApp" alt="Share on WhatsApp"></a>
+ 
+ @click="send"  />
  <!-- Features section -->
     <h2 class="text-center">Features</h2>
     <p class="text-center" style="font-size:20px">Here are some amazing features of the tracker that you will fall in love with
@@ -43,11 +48,19 @@
 
 export default {
   name: 'PageIndex',
-  
+  data(){
+    return{
+    number:'',
+    dense:false
+    }
+  },
   methods:{
      map: function() {
       return this.$router.push('/')
     },
+    send: function(event) {
+            window.open("https://api.whatsapp.com/send?phone=xxxxxxxxxx"+this.number);
+        },
       onOpenHandler () {
         alert('Payments Modal is Opened');
       },
