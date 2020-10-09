@@ -10,6 +10,58 @@
       <div id="mapCanvas"></div>
     </div>
 
+<q-dialog v-model="prompt" persistent>
+      <q-card style="min-width: 350px">
+        <q-card-section>
+          <div class="text-h6">Enter Details</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+         <q-form
+      @submit="onSubmit"
+      @reset="onReset"
+      class="q-gutter-md"
+    >
+      <q-input
+        filled
+        v-model="name"
+        label="Your name *"
+        hint="Name and surname"
+        lazy-rules
+        :rules="[ val => val && val.length > 0 || 'Please type something']"
+      />
+
+      <q-input
+        filled
+        type="number"
+        v-model="age"
+        label="Your age *"
+        lazy-rules
+        :rules="[
+          val => val !== null && val !== '' || 'Please type your age',
+          val => val > 0 && val < 100 || 'Please type a real age'
+        ]"
+      />
+
+      <q-toggle v-model="accept" label="I accept the license and terms" />
+
+      <div>
+        <q-btn label="Submit" type="submit" color="primary"/>
+        <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
+      </div>
+    </q-form>
+        </q-card-section>
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="Cancel" v-close-popup />
+          <q-btn flat label="Add Your Connection" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+
+
+
   </q-page>
 
 </template>
@@ -23,14 +75,20 @@ export default {
     return {
       drawer: true,
       miniState: true,
+       alert: false,
+      confirm: false,
+      prompt: false,
       map: '',
       text: '',
+      name: null,
+      age: null,
+      accept: false,
       geoJsonText: '',
       point: '',
       control:null,
       myLines: [],
       myLinesString: [],
-      
+      totalDistance:'',
       polygonCoords: [],
       polylineCoords: [],
       baseLayerGroup: new L.layerGroup(),
@@ -116,15 +174,19 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(this.map);
 
-
+var self=this
 
 this.control=L.Routing.control({
-    waypoints: [
-   
-    ],
+    waypoints: [],
     routeWhileDragging: false,
      geocoder: L.Control.Geocoder.nominatim()
-})
+}) 
+.on('routesfound', function(e) {
+        var routes = e.routes;
+         alert('Found ' + routes.length + ' route(s).');
+        self.totalDistance=routes[0].summary.totalDistance
+        console.log(self.totalDistance)
+    })
 this.control.addTo(this.map)
       //Render the geoJson data onto the map
       //this.addLayerToMap();
@@ -137,8 +199,9 @@ L.DomEvent.on(startBtn, 'click', function() {
         self.control.spliceWaypoints(0, 1, e.latlng);
         self.map.closePopup();
     });
+
     L.DomEvent.on(destBtn, 'click', function() {
-        control.spliceWaypoints(control.getWaypoints().length - 1, 1, e.latlng);
+        self.control.spliceWaypoints(self.control.getWaypoints().length - 1, 1, e.latlng);
         self.map.closePopup();
     });
     L.popup()
@@ -178,17 +241,39 @@ L.DomEvent.on(startBtn, 'click', function() {
     this.getLocation()
     this.map.on('locationfound',function(e){
     self.map.stopLocate()
-    
+    self.prompt=true
     self.control.spliceWaypoints(self.control.getWaypoints().length - 1, 1, e.latlng);
 })
   },  
-  
-  },
+  onSubmit () {
+      if (this.accept !== true) {
+        this.$q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'warning',
+          message: 'You need to accept the license and terms first'
+        })
+      }
+      else {
+        this.$q.notify({
+          color: 'green-4',
+          textColor: 'white',
+          icon: 'cloud_done',
+          message: 'Submitted'
+        })
+      }
+    },
 
-  mounted () {
+    onReset () {
+      this.name = null
+      this.age = null
+      this.accept = false
+    }
+  },
+  mounted() {
     this.initMap()
   }
-}
+  }
 </script>
 
 <style>
