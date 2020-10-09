@@ -4,7 +4,7 @@
      class="full-width q-pa-sm q-gutter-md fixed text-center "
       style="z-index: 200;"
     >
-     <q-btn color="red"  label="Get Location" v-on:click="getLocation"/>
+     <q-btn color="red"  label="Get Location" v-on:click="indexYourLocation"/>
 </div>
     <div class="full-width">
       <div id="mapCanvas"></div>
@@ -15,7 +15,8 @@
 </template>
 
 <script>
-
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.js'
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
 export default {
   name: 'app',
   data () {
@@ -26,6 +27,7 @@ export default {
       text: '',
       geoJsonText: '',
       point: '',
+      control:null,
       myLines: [],
       myLinesString: [],
       
@@ -108,16 +110,50 @@ export default {
         "Colored": colored
       };
 
-
       L.control.layers(baseMaps, null, { position: 'topleft' }).addTo(this.map);
 
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(this.map);
 
+
+
+this.control=L.Routing.control({
+    waypoints: [
+   
+    ],
+    routeWhileDragging: false,
+     geocoder: L.Control.Geocoder.nominatim()
+})
+this.control.addTo(this.map)
       //Render the geoJson data onto the map
       //this.addLayerToMap();
-
+var self=this
+this.map.on('click', function(e) {
+    var container = L.DomUtil.create('div'),
+        startBtn = self.createButton('Start from this location', container),
+        destBtn = self.createButton('Go to this location', container);
+L.DomEvent.on(startBtn, 'click', function() {
+        self.control.spliceWaypoints(0, 1, e.latlng);
+        self.map.closePopup();
+    });
+    L.DomEvent.on(destBtn, 'click', function() {
+        control.spliceWaypoints(control.getWaypoints().length - 1, 1, e.latlng);
+        self.map.closePopup();
+    });
+    L.popup()
+        .setContent(container)
+        .setLatLng(e.latlng)
+        .openOn(self.map);
+});
     },
     /***************************************************GeoJson-related Functions******************************************************/
-    
+    createButton(label, container) {
+    var btn = L.DomUtil.create('button', '', container);
+    btn.setAttribute('type', 'button');
+    btn.innerHTML = label;
+    return btn;
+},
     getBaseMap: function () {
       var southWest5to6 = L.latLng(3.776559, 55.986328), northEast5to6 = L.latLng(36.456636, 104.501953), boundSet5to6 = L.latLngBounds(southWest5to6, northEast5to6)
       var southWest7to10 = L.latLng(4.653080, 67.763672), northEast7to10 = L.latLng(29.573457, 89.208984), boundSet7to10 = L.latLngBounds(southWest7to10, northEast7to10)
@@ -136,16 +172,19 @@ export default {
         setView:true,
         enableHighAccuracy:true,
       })
-      var self=this
-      
-this.map.on('locationfound',function(e){
-console.log('found')
-self.map.stopLocate()
-var marker=L.marker([e.latlng.lat,e.latlng.lng]).addTo(self.map)
-console.log(e.latlng.lat)
+},
+  indexYourLocation(){
+    var self=this
+    this.getLocation()
+    this.map.on('locationfound',function(e){
+    self.map.stopLocate()
+    
+    self.control.spliceWaypoints(self.control.getWaypoints().length - 1, 1, e.latlng);
 })
-    }
+  },  
+  
   },
+
   mounted () {
     this.initMap()
   }

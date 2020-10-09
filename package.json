@@ -12,6 +12,7 @@
   "dependencies": {
     "@quasar/extras": "^1.0.0",
     "core-js": "^3.6.5",
+    "leaflet-routing-machine": "^3.2.12",
     "quasar": "^1.0.0"
   },
   "devDependencies": {
